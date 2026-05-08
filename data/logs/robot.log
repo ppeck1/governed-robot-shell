@@ -1,0 +1,106 @@
+2026-05-06T13:13:20 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-06T13:13:22 | input='walk forward' | intent=move | action=step_forward | approved=False | reason=Movement blocked in shell phase.
+2026-05-08T17:23:13 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T17:23:13 | input='look around' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T17:23:13 | input='act curious' | intent=curious | action=express_curious | approved=True | reason=Action approved.
+2026-05-08T17:23:13 | input='huh' | intent=confused | action=express_confused | approved=True | reason=Action approved.
+2026-05-08T17:23:13 | input='flutter' | intent=idle | action=idle_flutter | approved=True | reason=Action approved.
+2026-05-08T17:23:13 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:23:13 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T17:26:10 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T17:26:10 | input='look around' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T17:26:10 | input='act curious' | intent=curious | action=express_curious | approved=True | reason=Action approved.
+2026-05-08T17:26:10 | input='flutter' | intent=idle | action=idle_flutter | approved=True | reason=Action approved.
+2026-05-08T17:26:10 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:29:34 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T17:29:34 | input='look around' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T17:29:34 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:32:45 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T17:32:45 | input='look around' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T17:32:45 | input='act curious' | intent=curious | action=express_curious | approved=True | reason=Action approved.
+2026-05-08T17:32:45 | input='flutter' | intent=idle | action=idle_flutter | approved=True | reason=Action approved.
+2026-05-08T17:32:45 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:32:51 | input='act curious' | intent=curious | action=express_curious | approved=True | reason=Action approved.
+2026-05-08T17:32:54 | input='flutter' | intent=idle | action=idle_flutter | approved=True | reason=Action approved.
+2026-05-08T17:32:56 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:36:10 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T17:36:10 | input='look around' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T17:36:10 | input='act curious' | intent=curious | action=express_curious | approved=True | reason=Action approved.
+2026-05-08T17:36:10 | input='flutter' | intent=idle | action=idle_flutter | approved=True | reason=Action approved.
+2026-05-08T17:36:10 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:36:15 | input='act curious' | intent=curious | action=express_curious | approved=True | reason=Action approved.
+2026-05-08T17:36:18 | input='flutter' | intent=idle | action=idle_flutter | approved=True | reason=Action approved.
+2026-05-08T17:36:20 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:44:04 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T17:44:04 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T17:44:04 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T17:44:04 | input='look around' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T17:44:04 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T17:44:04 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T17:44:04 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T17:44:10 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T17:44:10 | input='look around' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T17:44:11 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:19:58 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:19:58 | input='capture image' | intent=capture_image | action=capture_camera_frame | approved=True | reason=Action approved.
+2026-05-08T18:20:02 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:20:02 | input='camera status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:20:02 | input='capture image' | intent=capture_image | action=capture_camera_frame | approved=True | reason=Action approved.
+2026-05-08T18:20:02 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:20:23 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:20:23 | input='capture image' | intent=capture_image | action=capture_camera_frame | approved=True | reason=Action approved.
+2026-05-08T18:20:23 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:20:23 | input='camera status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:20:23 | input='capture image' | intent=capture_image | action=capture_camera_frame | approved=True | reason=Action approved.
+2026-05-08T18:20:23 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:32:38 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:32:38 | input='camera diagnostics' | intent=camera_diagnostics | action=run_camera_diagnostics | approved=True | reason=Action approved.
+2026-05-08T18:32:38 | input='capture image' | intent=capture_image | action=capture_camera_frame | approved=True | reason=Action approved.
+2026-05-08T18:32:44 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:32:44 | input='camera diagnostics' | intent=camera_diagnostics | action=run_camera_diagnostics | approved=True | reason=Action approved.
+2026-05-08T18:32:44 | input='capture image' | intent=capture_image | action=capture_camera_frame | approved=True | reason=Action approved.
+2026-05-08T18:32:44 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:38:03 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:38:03 | input='poll distance' | intent=poll_distance | action=poll_distance_sensor | approved=True | reason=Action approved.
+2026-05-08T18:38:09 | input='poll distance' | intent=poll_distance | action=poll_distance_sensor | approved=True | reason=Action approved.
+2026-05-08T18:38:09 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:38:09 | input='poll distance' | intent=poll_distance | action=poll_distance_sensor | approved=True | reason=Action approved.
+2026-05-08T18:38:09 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:38:09 | input='poll distance' | intent=poll_distance | action=poll_distance_sensor | approved=True | reason=Action approved.
+2026-05-08T18:38:09 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:43:46 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:43:46 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T18:43:52 | input='poll distance' | intent=poll_distance | action=poll_distance_sensor | approved=True | reason=Action approved.
+2026-05-08T18:43:52 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:43:52 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T18:49:02 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:49:02 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T18:49:02 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T18:49:08 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:49:08 | input='take a look' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T18:49:08 | input='how close is that' | intent=distance_status | action=report_distance_status | approved=True | reason=Action approved.
+2026-05-08T18:49:08 | input='come here' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T18:57:09 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T18:57:09 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T18:57:09 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T18:57:13 | input='how close is that' | intent=distance_status | action=report_distance_status | approved=True | reason=Action approved.
+2026-05-08T18:57:13 | input='come here' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T18:57:38 | input='take a look' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T19:17:08 | input='take a look' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T19:17:08 | input='how close is that' | intent=idle | action=idle_flutter | approved=True | reason=Action approved.
+2026-05-08T19:17:08 | input='walk forward' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T19:17:13 | input='take a look' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T19:17:13 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T19:17:13 | input='come here' | intent=move | action=step_forward | approved=False | reason='step_forward' is blocked. Mode=shell, movement_enabled=False.
+2026-05-08T19:17:13 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T19:36:30 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved.
+2026-05-08T19:36:30 | input='chirp' | intent=chirp | action=play_chirp | approved=True | reason=Action approved.
+2026-05-08T19:36:43 | input='take a look' | intent=scan | action=head_turn_left_right | approved=True | reason=Action approved.
+2026-05-08T19:36:43 | input='how close is that' | intent=distance_status | action=report_distance_status | approved=True | reason=Action approved.
+2026-05-08T19:43:00 | input='status' | intent=status | action=report_status | approved=True | reason=Action approved. | source=user
+2026-05-08T19:43:00 | input='behavior status' | intent=behavior_status | action=report_behavior_status | approved=True | reason=Action approved. | source=user
+2026-05-08T19:43:00 | input='behavior tick' | intent=behavior_tick | action=run_behavior_tick | approved=True | reason=Action approved. | source=user
+2026-05-08T19:43:05 | input='behavior status' | intent=behavior_status | action=report_behavior_status | approved=True | reason=Action approved. | source=user
+2026-05-08T19:43:05 | input='behavior tick' | intent=behavior_tick | action=run_behavior_tick | approved=True | reason=Action approved. | source=user
+2026-05-08T19:43:05 | input='[behavior_tick]' | intent=behavior | action=play_chirp | approved=True | reason=Action approved. | source=behavior_scheduler
+2026-05-08T19:43:05 | input='behavior tick' | intent=behavior_tick | action=run_behavior_tick | approved=True | reason=Action approved. | source=user

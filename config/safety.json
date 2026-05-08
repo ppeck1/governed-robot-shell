@@ -1,0 +1,74 @@
+{
+  "blocked_actions": [
+    "step_forward"
+  ],
+  "allowed_modes": {
+    "shell": [
+      "play_chirp",
+      "head_turn_left_right",
+      "enter_idle_mode",
+      "idle_flutter",
+      "express_curious",
+      "express_confused",
+      "wake",
+      "sleep",
+      "report_status",
+      "report_camera_status",
+      "capture_camera_frame",
+      "run_camera_diagnostics",
+      "report_distance_status",
+      "poll_distance_sensor",
+      "report_behavior_status",
+      "run_behavior_tick"
+    ],
+    "expressive": [
+      "play_chirp",
+      "head_turn_left_right",
+      "enter_idle_mode",
+      "idle_flutter",
+      "express_curious",
+      "express_confused",
+      "wake",
+      "sleep",
+      "report_status",
+      "report_camera_status",
+      "capture_camera_frame",
+      "run_camera_diagnostics",
+      "report_distance_status",
+      "poll_distance_sensor",
+      "report_behavior_status",
+      "run_behavior_tick"
+    ],
+    "mobile": [
+      "play_chirp",
+      "head_turn_left_right",
+      "enter_idle_mode",
+      "idle_flutter",
+      "express_curious",
+      "express_confused",
+      "wake",
+      "sleep",
+      "step_forward",
+      "report_status",
+      "report_camera_status",
+      "capture_camera_frame",
+      "run_camera_diagnostics",
+      "report_distance_status",
+      "poll_distance_sensor",
+      "report_behavior_status",
+      "run_behavior_tick"
+    ]
+  },
+  "movement_actions": [
+    "step_forward"
+  ],
+  "sensor_gates": {
+    "distance": {
+      "enabled": true,
+      "blocked_statuses": [
+        "critical"
+      ],
+      "unknown_blocks_movement": false
+    }
+  }
+}

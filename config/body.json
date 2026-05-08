@@ -1,0 +1,141 @@
+{
+  "backend": "mock",
+  "servo": {
+    "enabled": false,
+    "frequency_hz": 50,
+    "channels": {
+      "head_yaw": {
+        "channel": 0,
+        "min_angle": 60,
+        "max_angle": 120,
+        "home_angle": 90
+      },
+      "left_flutter": {
+        "channel": 1,
+        "min_angle": 75,
+        "max_angle": 105,
+        "home_angle": 90
+      },
+      "right_flutter": {
+        "channel": 2,
+        "min_angle": 75,
+        "max_angle": 105,
+        "home_angle": 90
+      }
+    }
+  },
+  "calibration": {
+    "enabled": false,
+    "test_channel": "head_yaw",
+    "start_angle": 90,
+    "step_degrees": 5,
+    "min_test_angle": 70,
+    "max_test_angle": 110
+  },
+  "motion": {
+    "step_delay_seconds": 0.25,
+    "return_home_after_action": true
+  },
+  "camera": {
+    "enabled": false,
+    "device_index": 0,
+    "capture_width": 640,
+    "capture_height": 480,
+    "save_captures": true,
+    "capture_directory": "data/captures",
+    "diagnostics": {
+      "probe_indices": [
+        0,
+        1,
+        2
+      ],
+      "save_metadata": true,
+      "metadata_log": "data/captures/capture_log.jsonl"
+    }
+  },
+  "distance_sensor": {
+    "enabled": false,
+    "backend": "mock",
+    "trigger_pin": null,
+    "echo_pin": null,
+    "mock_distance_cm": 100.0,
+    "warning_distance_cm": 30.0,
+    "critical_distance_cm": 15.0,
+    "poll_timeout_seconds": 1.0
+  },
+  "llm": {
+    "enabled": false,
+    "backend": "mock",
+    "confidence_threshold": 0.7,
+    "fallback_to_rules": true,
+    "allowed_intents": [
+      "scan",
+      "chirp",
+      "sleep",
+      "wake",
+      "curious",
+      "confused",
+      "idle",
+      "move",
+      "status",
+      "camera_status",
+      "capture_image",
+      "camera_diagnostics",
+      "distance_status",
+      "poll_distance"
+    ],
+    "ollama": {
+      "base_url": "http://localhost:11434",
+      "model": "llama3.2:3b",
+      "timeout_seconds": 30,
+      "temperature": 0.0,
+      "top_p": 0.9,
+      "max_context_chars": 1200,
+      "fallback_confidence_for_exact_examples": 0.75
+    },
+    "prefer_rules_when_confident": true,
+    "rule_strong_intents": [
+      "scan",
+      "chirp",
+      "sleep",
+      "wake",
+      "curious",
+      "confused",
+      "move",
+      "status",
+      "camera_status",
+      "capture_image",
+      "camera_diagnostics",
+      "distance_status",
+      "poll_distance"
+    ],
+    "decision_logging": {
+      "enabled": true,
+      "log_path": "data/logs/llm_decisions.jsonl"
+    }
+  },
+  "behavior": {
+    "enabled": false,
+    "mode": "passive",
+    "tick_interval_seconds": 5.0,
+    "idle_after_seconds": 20.0,
+    "min_action_cooldown_seconds": 15.0,
+    "max_actions_per_session": 20,
+    "allowed_actions": [
+      "idle_flutter",
+      "play_chirp",
+      "head_turn_left_right",
+      "express_curious"
+    ],
+    "weights": {
+      "idle_flutter": 0.45,
+      "play_chirp": 0.2,
+      "head_turn_left_right": 0.25,
+      "express_curious": 0.1
+    },
+    "blocked_actions": [
+      "step_forward"
+    ],
+    "log_behavior_events": true
+  }
+}
