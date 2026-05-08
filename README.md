@@ -1,6 +1,7 @@
 # Governed Robot Shell
 
 **This is an early architecture prototype, not a production robotics safety system.**
+
 A governed robot-control shell where natural language is compressed into intent, validated by a layered safety system, and only then passed to physical or simulated hardware. The project's central design goal is that **no component — including the LLM — holds direct authority over actuators**.
 
 Current build: **Phase 6A**
