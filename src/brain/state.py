@@ -6,6 +6,8 @@ from typing import Any, Optional
 class RobotState:
     mode: str = "shell"                     # shell | expressive | mobile
     movement_enabled: bool = False
+    emergency_stop: bool = False
+    motion_inhibited: bool = False
     last_intent: Optional[str] = None
     last_action: Optional[str] = None
     sensors: dict = field(default_factory=dict)
@@ -14,6 +16,8 @@ class RobotState:
         return {
             "mode": self.mode,
             "movement_enabled": self.movement_enabled,
+            "emergency_stop": self.emergency_stop,
+            "motion_inhibited": self.motion_inhibited,
             "last_intent": self.last_intent,
             "last_action": self.last_action,
             "sensors": dict(self.sensors),

@@ -107,124 +107,39 @@ This is correct and consistent — blocked actions produce no state change.
 
 Next: Phase 4 sensors, or real hardware session if PCA9685 is ready.
 
-## 2026-05-08 — Phase 4A Camera/Perception Scaffold
+## 2026-06-09 - Phase 3F / Sim S0-S3 Virtual Environment
 
-- `src/perception/` created with `camera.py` and `perception_controller.py`.
-- `data/captures/` directory created.
-- OpenCV: installed in build environment; no physical webcam present.
-- Camera enabled, device 0: initialized but not ready (no device) — safe failure ✓
-- Camera disabled: capture refused cleanly ✓
-- `capture_camera_frame` and `report_camera_status` added to all safety allowlists.
-- Status command now includes camera fields.
+- Added `RobotRuntime` as the shared governed command path for CLI and API.
+- Added deterministic simulator modules under `src/sim/`.
+- Added `backend = "sim"` support to `BodyController`; default `config/body.json` remains `"backend": "mock"`.
+- Added FastAPI simulator app at `src/sim_api.py`.
+- Added static local dashboard under `src/sim_static/` with command controls, sensor/status panels, event log, and 3D-style canvas view.
+- Added deterministic scenarios for boot/status, chirp, scan, curious/confused, sleep/wake, blocked walk, and obstacle probe.
+- Added structured JSONL logging at `data/logs/robot_events.jsonl`.
+- Added pytest coverage for pipeline, safety, sim backend, scenario replay, API routes, and dashboard hooks.
+- No hardware movement added. Locomotion remains blocked in shell mode and refused by the sim backend.
 
-**Bug fixed during build:** `parents[3]` in camera.py and perception_controller.py
-was one level too deep — changed to `parents[2]` to correctly resolve project root.
+## 2026-06-09 - Phase 3G / Sim S4-S7 Governed Replay and Proposals
 
-Next: Phase 4B distance/touch sensors, or real hardware session.
+- Added `utils/events.py` with a single append-only kernel event writer.
+- Added event export and replay support through `RobotRuntime`.
+- Added `/sim/events`, `/sim/export`, `/sim/replay`, `/sim/manifest`, `/sim/readiness`, and proposal queue endpoints.
+- Added emergency stop and motion inhibit fields to `RobotState`.
+- Added sensor-aware movement safety: mobile movement now also needs sufficient `front_clearance`.
+- Added finite emergency actions: `set_emergency_stop`, `clear_emergency_stop`.
+- Added manifest/readiness helpers and review-only proposal queue.
+- Dashboard now includes safety gate, readiness, replay/export, and proposal preview panels.
+- Test suite expanded to 18 passing.
+- No autonomous learning, LLM provider, or hardware movement added.
 
-## 2026-05-08 — Phase 4B Camera Diagnostics and Metadata
+## 2026-06-09 - Phase 3H Action Registry and Nonverbal Cues
 
-- `run_camera_diagnostics` action added; routed to `PerceptionController`.
-- `Camera.run_diagnostics()` probes indices [0,1,2] — no saves, no previews.
-- `Camera.capture_frame()` records metadata on both success and failure.
-- Metadata JSONL log: `data/captures/capture_log.jsonl` (project-root-relative).
-- Status now includes: camera_device, last_capture_ok, last_capture_size.
-- Test 1 (disabled): all camera commands safe ✓
-- Test 2 (enabled, no webcam): diagnostics show 3 probed indices as unopened ✓;
-  failed capture metadata correctly stored ✓; shell continues ✓
-
-Note: OpenCV V4L2/FFMPEG warnings on stderr are expected when no /dev/video* exists.
-They are not errors — the shell continues cleanly.
-
-## 2026-05-08 — Phase 4C Distance Sensor Scaffold
-
-- `src/sensors/` created with `distance_sensor.py` and `sensor_controller.py`.
-- `SensorController(state)` instantiated at startup with RobotState reference.
-- Mock backend tested at 100 cm (safe), 25 cm (warning), 10 cm (critical).
-- All classifications correct; `state.sensors` populated on each poll.
-- `status` command shows distance fields from live state.sensors dict.
-- No hardware GPIO implemented — mock only.
-
-Next: Phase 5 LLM intent layer, or Phase 4D touch/tilt sensors, or real hardware session.
-
-## 2026-05-08 — Phase 4D Sensor-Aware Safety Gate
-
-- `safety.py` refactored with 5-step evaluation order.
-- `is_movement_action()` and `check_sensor_gates()` helpers added.
-- `config/safety.json` updated with `movement_actions` and `sensor_gates`.
-- `tools/test_sensor_safety.py` created — 7/7 PASS:
-  - safe (30.1 cm)    → approved ✓
-  - warning (20 cm)   → approved ✓
-  - critical (10 cm)  → blocked  ✓
-  - missing           → approved ✓
-  - full gate mobile/no-sensor → approved ✓
-  - full gate mobile/critical  → blocked  ✓
-  - shell mode/safe sensor     → blocked (mode gate) ✓
-- Normal shell behavior unchanged.
-
-Next: Phase 5 LLM intent layer, or real hardware session.
-
-## 2026-05-08 — Phase 5A LLM Intent Classifier Scaffold
-
-- `src/llm/` created.
-- `MockIntentClassifier`: ~20 natural phrases mapped to allowed intents.
-- `LLMController`: vocabulary gate, confidence threshold, fallback-to-rules logic.
-- Disabled default: rule parser behavior unchanged ✓
-- Mock enabled: "take a look" → scan, "how close is that" → distance_status ✓
-- "come here" → move → step_forward → safety blocked ✓
-- Invalid intent "set_servo_angle" → rejected ✓
-- Low confidence 0.2 → fallback to rule intent ✓
-- Status shows llm_enabled, llm_backend, llm_last_used, llm_last_intent, confidence ✓
-
-Next: Phase 5B — real API backend (Anthropic/OpenAI/Ollama), or Phase 5B prompt hardening.
-
-## 2026-05-08 — Phase 5B Local Ollama Intent Backend
-
-- `src/llm/ollama_classifier.py` created; standard library HTTP only.
-- `tools/test_llm_response_validation.py`: 13/13 PASS.
-  - Bug caught during build: regex was extracting `{...}` from inside arrays.
-  - Fix: try `json.loads()` first; reject if array before attempting regex.
-- `tools/test_ollama_classifier.py` created for live Ollama testing.
-- Test A (disabled): behavior unchanged ✓
-- Test B (mock): still works ✓
-- Test C (validation): 13/13 PASS ✓
-- Test D (ollama, no server): connection refused → fallback → shell continues ✓
-- Test E (ollama live): requires Ollama running locally with llama3.2:3b pulled.
-
-## 2026-05-08 — Phase 5C Ollama Tuning and Rule-First Arbitration
-
-- Rule-first arbitration implemented; `prefer_rules_when_confident` config flag.
-- Ollama timeout → 30 s; timeout handled cleanly, no stack traces.
-- Prompt strengthened with 14 canonical examples.
-- `tools/test_llm_arbitration.py`: 8/8 PASS.
-  - Strong intents (scan, chirp, move, status): LLM skipped ✓
-  - idle + mock match (how close is that): LLM used ✓
-  - idle + no match (xyzzy): fallback idle ✓
-- `tools/warm_ollama.py` created for pre-session model warm-up.
-- `tools/test_ollama_classifier.py` updated with per-prompt timing.
-- Test D (Ollama unavailable): `[LLM] Ollama classify failed: ...` → fallback ✓
-
-## 2026-05-08 — Phase 5D LLM Decision Logging
-
-- `src/llm/decision_logger.py` created.
-- `LLMController` writes one JSONL record per classify_intent() call.
-- `tools/test_llm_decision_log.py`: 6/6 PASS:
-  - llm_disabled ✓, rule_preferred ✓, gap_fill accepted ✓,
-    low_confidence ✓, invalid_intent ✓, jsonl_valid ✓
-- Status shows `llm_decision_log` path when logging enabled.
-- Production log: `data/logs/llm_decisions.jsonl`
-
-Next: Phase 5E (transcript logging), or Phase 6 (movement/locomotion).
-
-## 2026-05-08 — Phase 6A Behavioral Scheduler Scaffold
-
-- `src/behavior/behavior_scheduler.py` created.
-- `log_event()` updated with optional `source` parameter (backward-compatible).
-- `tools/test_behavior_scheduler.py`: 7/7 PASS.
-  - Note: 50-instance locomotion test prints scheduler init message 50 times.
-  - This is noisy but harmless — consider a `quiet=True` init param in future cleanup.
-- `tools/test_behavior_safety.py`: 5/5 PASS.
-- Test A (disabled): behavior fields in status ✓, tick returns no-action ✓
-- Test B (enabled): first forced tick proposes action ✓, second blocked by cooldown ✓
-
-Next: Phase 6B (threading / background tick), or Phase 6C (locomotion enable sequence).
+- Added `brain/action_registry.py` with one code-level registry for planner action metadata.
+- Added `body/audio_cues.py` with chirp-only symbolic cue ids.
+- Added `CommandEnvelope` support to `RobotRuntime`.
+- Safety now uses registry metadata for known actions, mode checks, movement requirements, emergency-stop behavior, and selected cue.
+- Mock backend prints cue ids through `[MOCK CUE] ...`.
+- Sim backend records `latest_audio_cue`, `audio_state`, and `cue_count`.
+- Preview commands evaluate parser/planner/safety without executing body actions or cue output.
+- Test suite expanded to 27 passing.
+- No speech, STT, TTS, wake word, real audio hardware, or locomotion behavior added.

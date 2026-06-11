@@ -14,3 +14,8 @@ _MOCK_BEHAVIORS = {
 def execute_action(action: str) -> None:
     description = _MOCK_BEHAVIORS.get(action, f"unknown action: {action}")
     print(f"\n[MOCK BODY] {description}")
+
+
+def emit_cue(cue_id: str) -> dict:
+    print(f"[MOCK CUE] {cue_id}")
+    return {"latest_audio_cue": cue_id, "audio_state": "cue"}

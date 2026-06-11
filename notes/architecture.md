@@ -95,180 +95,40 @@ Status is routed through the normal safety layer (it must be in the mode's allow
 
 This gives hardware testing a low-risk diagnostic surface: run `status` before and after any expression action to confirm channel positions are tracking correctly.
 
-## Perception Layer
+## Virtual Simulator
 
-The perception subsystem is a separate session-scoped controller, initialized alongside `RobotState` and `BodyController`.
+The simulator is an opt-in body backend and API surface. It is not an alternate authority path.
 
-```
-main.py
-  state      = RobotState()
-  body       = BodyController()
-  perception = PerceptionController()   ← new
-      └── Camera (OpenCV)
-              ├── capture_frame()  → data/captures/capture_YYYYMMDD_HHMMSS.jpg
-              └── get_status()     → ready, last_capture
-```
-
-Perception may: observe, capture, report, persist sensor data.
-
-Perception may NOT: directly trigger movement, bypass safety, act autonomously.
-
-Camera actions (`report_camera_status`, `capture_camera_frame`) are routed through safety like all other actions but dispatched to `PerceptionController`, never to the body backend.
-
-Current perception backend: webcam via OpenCV.
-
-## Camera Diagnostics and Metadata
-
-Camera diagnostics allow safe local probing of available webcam indices without streaming or saving images. Each probe index is opened, queried for dimensions, and released — no frames are captured, no preview windows opened.
-
-Captures produce structured metadata records (success or failure) stored on the `Camera` instance as `last_capture_metadata`. If `diagnostics.save_metadata` is true in config, each record is also appended as a JSON line to `data/captures/capture_log.jsonl` using a project-root-relative path.
-
-This gives hardware testing a persistent audit trail: if a capture produces an unexpected size or fails intermittently, the JSONL log shows the exact timestamps and dimensions without relying on console output.
-
-## Sensor Layer
-
-The sensor subsystem provides environmental state inputs to `RobotState`.
-
-```
-main.py
-  sensors = SensorController(state)   ← holds RobotState reference
-      └── DistanceSensor (mock | gpio future)
-              ├── poll_distance()  → classifies: safe / warning / critical
-              └── get_status()     → ready, last_distance_cm, last_status
-                       ↓
-              state.sensors["distance_cm"]
-              state.sensors["distance_status"]
-              state.sensors["distance_timestamp"]
+```text
+dashboard/API command
+  -> RobotRuntime.process_command()
+  -> intent parser
+  -> planner
+  -> safety
+  -> BodyController
+  -> SimBody
 ```
 
-Sensor data flows into `RobotState.sensors` and may later inform safety decisions, but sensors do not autonomously trigger body actions in the current architecture. The safety layer will query `state.sensors` explicitly when sensor-aware gating is implemented.
+`SimBody` updates only virtual robot state. It refuses `step_forward` directly as a second line of defense. The dashboard reads snapshots from `/sim/state` and sends natural-language commands to `/sim/command`; it never sends raw servo angles, GPIO values, or actuator commands.
 
-## Sensor-Aware Safety
+Structured event records are appended to `data/logs/robot_events.jsonl` alongside the legacy text log.
 
-Sensor readings flow into `RobotState.sensors` via `SensorController`.
-The safety layer reads that state when evaluating movement-class actions.
+## Event Kernel, Replay, And Readiness
 
-```
-sensor poll
-  → SensorController.poll_distance()
-  → state.sensors["distance_status"] = "critical" | "warning" | "safe"
-          ↓
-  check_safety(action, state)
-    1. unknown action?         → fail closed
-    2. blocked_actions list?   → block (unless mobile + movement_enabled)
-    3. mode allowlist?         → block if not in mode
-    4. sensor gates?           → block if distance_status == "critical"
-    5.                         → approve
-```
+Simulator-era events are written through `utils/events.py`. The kernel event stream is append-only and exported through `/sim/export`.
 
-Sensors constrain approval — they do not initiate movement.
+Replay is currently snapshot-based: every event with `state_after` advances the replayed state. This keeps replay deterministic while the simulator is early and avoids introducing a database.
 
-## LLM Intent Layer
+Readiness is exposed through `/sim/readiness`. It is advisory only and never changes robot state or safety decisions.
 
-The LLM controller sits between the rule parser and the planner.
+## Proposal Scaffold
 
-```
-CLI input
-  → parse_intent()          rule parser  (always runs first)
-  → llm.classify_intent()   advisory layer (disabled by default)
-      ├── validate: in allowed_intents?     → reject if not
-      ├── validate: confidence >= threshold? → reject if not
-      └── fallback to rule_intent if rejected (configurable)
-  → final_intent
-  → choose_action()         planner (authoritative)
-  → check_safety()          safety  (authoritative)
-  → subsystem dispatch
-```
+`/sim/proposals/preview` creates a review-only proposal from a text command. It runs the same parser/planner/safety preview but does not execute. Approving a proposal sends the original text command through `RobotRuntime` exactly once. Rejection never mutates robot state.
 
-The LLM may only propose one intent from the finite `allowed_intents` list. It may not emit actions, modify state, call hardware, or bypass safety. Planner and safety remain authoritative regardless of LLM output.
+## Action Registry and Nonverbal Cues
 
-## Local Ollama Intent Backend
+`brain/action_registry.py` is the code-level source of truth for action metadata. Planner outputs must be present in the registry before safety will approve them.
 
-The Ollama backend is an optional local classifier that extends the Phase 5A LLM slot.
+The cue layer is nonverbal only. `body/audio_cues.py` defines symbolic chirp ids such as `chirp_ack`, `chirp_blocked`, and `chirp_alert`. Cues are emitted as outputs after a safety decision; they do not create authority and cannot cause motion.
 
-```
-user input
-  → OllamaIntentClassifier.classify()
-      ├── build prompt (system + allowed list + user text + context)
-      ├── POST /api/generate to localhost:11434
-      ├── parse response:
-      │     try direct json.loads → reject if array
-      │     fallback: regex extract first {...} block
-      │     strip markdown fences
-      ├── validate fields: intent ∈ allowed, confidence ∈ [0,1]
-      └── return {intent, confidence, source, reason}
-  → LLMController vocabulary gate (second line of defense)
-  → LLMController confidence gate
-  → final_intent → planner
-```
-
-Ollama uses standard library HTTP only — no extra pip packages required.
-Ollama never calls hardware or tools directly.
-Connection failures fall back to rule intent immediately.
-
-## Rule-First LLM Arbitration
-
-The LLM layer is subordinate to deterministic parsing.
-
-```
-parse_intent(raw)  →  rule_intent
-                           │
-               ┌───────────┴───────────┐
-          strong?                    idle?
-        (in rule_strong_intents)   (not matched)
-               │                       │
-         skip LLM                  call LLM
-         final = rule_intent        validate → gate
-                                    final = llm_intent (if accepted)
-                                    final = rule_intent (if rejected)
-```
-
-Strong intents: scan, chirp, sleep, wake, curious, confused, move, status,
-camera_status, capture_image, camera_diagnostics, distance_status, poll_distance.
-
-The LLM fills gaps — it does not override clean deterministic matches.
-
-## LLM Decision Logging
-
-Every `classify_intent()` call writes one structured record to `data/logs/llm_decisions.jsonl`. This provides a persistent audit trail of how raw input became final intent.
-
-```
-classify_intent(user_input, rule_intent, state)
-  → arbitration result
-  → _write_log()
-      → make_record()  ← metadata only, no prompt, no raw response
-      → append to data/logs/llm_decisions.jsonl
-```
-
-The log is observational only. It does not affect planner or safety behavior.
-Full prompt and raw response logging are reserved for a future transcript phase.
-
-## Behavioral Scheduler
-
-The behavioral scheduler is a session-scoped timing layer for passive expressive behaviors.
-
-```
-main.py
-  behavior = BehaviorScheduler(state, config)
-
-Per command:
-  behavior.notify_user_activity()    ← resets idle timer
-
-Manual or background:
-  decision = behavior.tick(force?)
-    ├── disabled?            → no action
-    ├── max actions?         → no action
-    ├── cooldown active?     → no action
-    ├── idle threshold?      → no action (unless force=True)
-    └── weighted_random()    → proposed action
-          ↓
-  check_safety(action, state)        ← still required
-          ↓
-  body.execute_action(action)        ← only if approved
-  behavior.record_execution(action)
-  log_event(..., source="behavior_scheduler")
-```
-
-This is NOT an agent loop. The scheduler does not plan, reason, call the LLM,
-inspect perception, or initiate movement. It only proposes safe expressive
-actions from a fixed configured list, which must still pass through safety.
+Mock mode prints cue ids. Sim mode records latest cue state. Servo mode remains audio-neutral.

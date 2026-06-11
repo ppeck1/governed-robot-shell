@@ -1,48 +1,63 @@
-"""
-Safety layer.
-
-Evaluation order for any requested action:
-  1. Unknown action / mode allowlist check  → fail closed on unknown
-  2. Explicit blocked_actions list          → always blocked
-  3. Movement gate: mode + movement_enabled → blocked unless mobile + enabled
-  4. Sensor gates: environment constraints  → block if critical distance etc.
-  5. Approve
-
-Public API (unchanged):
-  check_safety(action, state=None) -> tuple[bool, str]
-
-Helpers (testable independently):
-  is_movement_action(action, config) -> bool
-  check_sensor_gates(action, state, config) -> tuple[bool, str]
-"""
+from __future__ import annotations
 
 import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Optional, TYPE_CHECKING
+
+from body.audio_cues import cue_for_blocked
+from brain.action_registry import get_action
 
 if TYPE_CHECKING:
     from brain.state import RobotState
 
-CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "safety.json"
+CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "safety.json"
 
 _DEFAULT_CONFIG = {
     "blocked_actions": ["step_forward"],
+    "sensor_thresholds": {"min_front_clearance": 0.5},
     "allowed_modes": {
         "shell": [
-            "play_chirp", "head_turn_left_right", "enter_idle_mode",
-            "idle_flutter", "express_curious", "express_confused",
-            "wake", "sleep",
+            "play_chirp",
+            "head_turn_left_right",
+            "enter_idle_mode",
+            "idle_flutter",
+            "express_curious",
+            "express_confused",
+            "wake",
+            "sleep",
+            "report_status",
+            "set_emergency_stop",
+            "clear_emergency_stop",
         ]
     },
-    "movement_actions": ["step_forward"],
-    "sensor_gates": {
-        "distance": {
-            "enabled": True,
-            "blocked_statuses": ["critical"],
-            "unknown_blocks_movement": False,
-        }
-    },
 }
+
+_EMERGENCY_ALLOWED = {"report_status", "sleep", "clear_emergency_stop"}
+
+
+@dataclass(frozen=True)
+class SafetyResult:
+    gate_id: str
+    action: str
+    decision: str
+    reason: str
+    mode: str
+    movement_enabled: bool
+    emergency_stop: bool
+    motion_inhibited: bool
+    sensor_snapshot: dict
+    action_category: str
+    selected_cue: str
+
+    @property
+    def approved(self) -> bool:
+        return self.decision == "approved"
+
+    def as_dict(self) -> dict:
+        data = asdict(self)
+        data["approved"] = self.approved
+        return data
 
 
 def _load_config() -> dict:
@@ -53,93 +68,72 @@ def _load_config() -> dict:
         return _DEFAULT_CONFIG
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def is_movement_action(action: str, config: dict) -> bool:
-    """Return True if action is classified as a movement-class action."""
-    return action in config.get("movement_actions", [])
-
-
-def check_sensor_gates(action: str, state: Optional["RobotState"],
-                       config: dict) -> tuple:
-    """
-    Evaluate sensor gates for a movement-class action.
-
-    Returns (approved: bool, reason: str).
-    Called only after action is confirmed to be a movement action.
-    If state is None, sensor gates are skipped (no state → no sensor data).
-    """
-    if state is None:
-        return True, "Action approved."
-
-    gates = config.get("sensor_gates", {})
-    distance_gate = gates.get("distance", {})
-
-    if not distance_gate.get("enabled", False):
-        return True, "Action approved."
-
-    blocked_statuses         = set(distance_gate.get("blocked_statuses", []))
-    unknown_blocks_movement  = distance_gate.get("unknown_blocks_movement", False)
-    distance_status          = state.sensors.get("distance_status")
-
-    if distance_status is None:
-        if unknown_blocks_movement:
-            return False, ("Movement blocked: distance sensor status unknown "
-                           "and unknown_blocks_movement is true.")
-        return True, "Action approved."
-
-    if distance_status in blocked_statuses:
-        dist_cm = state.sensors.get("distance_cm", "?")
-        return False, (f"Movement blocked by sensor gate: "
-                       f"distance_status='{distance_status}' "
-                       f"({dist_cm} cm).")
-
-    return True, "Action approved."
-
-
-# ── Public gate ───────────────────────────────────────────────────────────────
-
-def check_safety(action: str, state: Optional["RobotState"] = None) -> tuple:
-    """
-    Evaluate whether an action may execute.
-
-    Returns (approved: bool, reason: str).
-    """
+def evaluate_safety(action: str, state: Optional["RobotState"] = None) -> SafetyResult:
     config = _load_config()
+    blocked = set(config.get("blocked_actions", []))
+    thresholds = config.get("sensor_thresholds", {})
+    min_front_clearance = float(thresholds.get("min_front_clearance", 0.5))
 
-    blocked      = set(config.get("blocked_actions", []))
-    allowed_modes = config.get("allowed_modes", {})
+    mode = getattr(state, "mode", "shell") if state else "shell"
+    movement_enabled = getattr(state, "movement_enabled", False) if state else False
+    emergency_stop = getattr(state, "emergency_stop", False) if state else False
+    motion_inhibited = getattr(state, "motion_inhibited", False) if state else False
+    sensors = dict(getattr(state, "sensors", {}) or {})
 
-    mode             = getattr(state, "mode",             "shell") if state else "shell"
-    movement_enabled = getattr(state, "movement_enabled", False)   if state else False
+    spec = get_action(action)
 
-    # 1. Build known action set; unknown → fail closed
-    all_known: set = set()
-    for actions in allowed_modes.values():
-        all_known.update(actions)
-    all_known.update(blocked)
-    all_known.update(config.get("movement_actions", []))
+    if spec is None:
+        return _result(action, "blocked", f"Unknown action '{action}'. Failing closed.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, "unknown", cue_for_blocked(unknown_action=True))
 
-    if action not in all_known:
-        return False, f"Unknown action '{action}'. Failing closed."
+    if emergency_stop and not spec.allowed_during_emergency:
+        return _result(action, "blocked", f"Emergency stop active. '{action}' is blocked.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, cue_for_blocked())
 
-    # 2. Explicit blocked list
-    if action in blocked:
-        # 3. Movement gate — only escape is mobile mode + movement_enabled
-        if mode == "mobile" and movement_enabled:
-            pass    # falls through to sensor gate below
-        else:
-            return False, (f"'{action}' is blocked. "
-                           f"Mode={mode}, movement_enabled={movement_enabled}.")
+    if spec.category == "movement" or action in blocked or spec.blocked_by_default:
+        if mode not in spec.allowed_modes or (spec.requires_movement_enabled and not movement_enabled):
+            return _result(action, "blocked", f"'{action}' is blocked. Mode={mode}, movement_enabled={movement_enabled}.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, cue_for_blocked())
+        if motion_inhibited:
+            return _result(action, "blocked", f"'{action}' is blocked by motion_inhibited.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, cue_for_blocked())
+        if spec.requires_front_clearance:
+            front_clearance = sensors.get("front_clearance")
+            if front_clearance is None:
+                return _result(action, "blocked", f"'{action}' is blocked: front_clearance sensor missing.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, cue_for_blocked())
+            if float(front_clearance) < min_front_clearance:
+                return _result(action, "blocked", f"'{action}' is blocked: front_clearance={front_clearance} below {min_front_clearance}.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, cue_for_blocked())
+        return _result(action, "approved", "Locomotion approved by state and sensor gates.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, spec.default_cue)
 
-    # 3b. Mode allowlist (for non-blocked actions)
-    elif action not in allowed_modes.get(mode, []):
-        return False, f"'{action}' not allowed in mode '{mode}'."
+    if mode not in spec.allowed_modes:
+        return _result(action, "blocked", f"'{action}' not allowed in mode '{mode}'.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, cue_for_blocked())
 
-    # 4. Sensor gates (movement-class actions only)
-    if is_movement_action(action, config):
-        approved, reason = check_sensor_gates(action, state, config)
-        if not approved:
-            return False, reason
+    return _result(action, "approved", "Action approved.", mode, movement_enabled, emergency_stop, motion_inhibited, sensors, spec.category, spec.default_cue)
 
-    return True, "Action approved."
+
+def check_safety(action: str, state: Optional["RobotState"] = None):
+    result = evaluate_safety(action, state)
+    return result.approved, result.reason
+
+
+def _result(
+    action: str,
+    decision: str,
+    reason: str,
+    mode: str,
+    movement_enabled: bool,
+    emergency_stop: bool,
+    motion_inhibited: bool,
+    sensors: dict,
+    action_category: str,
+    selected_cue: str,
+) -> SafetyResult:
+    return SafetyResult(
+        gate_id="robot_safety_gate.v0.2",
+        action=action,
+        decision=decision,
+        reason=reason,
+        mode=mode,
+        movement_enabled=movement_enabled,
+        emergency_stop=emergency_stop,
+        motion_inhibited=motion_inhibited,
+        sensor_snapshot=dict(sensors),
+        action_category=action_category,
+        selected_cue=selected_cue,
+    )

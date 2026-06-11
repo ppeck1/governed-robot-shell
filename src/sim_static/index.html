@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LLM Robot Shell Simulator</title>
+  <link rel="stylesheet" href="/sim_static/styles.css">
+</head>
+<body>
+  <header>
+    <h1>LLM Robot Shell Simulator</h1>
+    <div id="backendBadge">backend: sim</div>
+  </header>
+  <main>
+    <section id="scenePanel">
+      <canvas id="threeScene" width="900" height="560" aria-label="3D robot simulation"></canvas>
+    </section>
+    <section id="controlPanel">
+      <h2>Command</h2>
+      <form id="commandForm">
+        <input id="commandInput" name="command" value="look around" autocomplete="off">
+        <button id="sendCommand" type="submit">Send</button>
+        <button id="resetSim" type="button">Reset</button>
+      </form>
+      <div id="quickCommands">
+        <button type="button" data-command="chirp">chirp</button>
+        <button type="button" data-command="look around">scan</button>
+        <button type="button" data-command="act curious">curious</button>
+        <button type="button" data-command="huh">confused</button>
+        <button type="button" data-command="walk forward">walk</button>
+        <button type="button" data-command="status">status</button>
+        <button type="button" data-command="emergency stop">e-stop</button>
+        <button type="button" data-command="clear emergency">clear stop</button>
+      </div>
+      <h2>Safety Gate</h2>
+      <pre id="gatePanel">{}</pre>
+      <h2>Status</h2>
+      <pre id="statusPanel">{}</pre>
+      <h2>Sensors</h2>
+      <pre id="sensorPanel">{}</pre>
+      <h2>Readiness</h2>
+      <pre id="readinessPanel">{}</pre>
+      <h2>Replay / Export</h2>
+      <div class="controls">
+        <button id="exportSim" type="button">Export</button>
+        <button id="runScenarios" type="button">Run Scenarios</button>
+      </div>
+      <pre id="replayPanel">{}</pre>
+      <h2>Proposal Preview</h2>
+      <div class="controls">
+        <button id="previewProposal" type="button">Preview Current</button>
+      </div>
+      <pre id="proposalPanel">{}</pre>
+      <h2>Event Log</h2>
+      <ol id="eventLog"></ol>
+    </section>
+  </main>
+  <script type="module" src="/sim_static/app.js"></script>
+</body>
+</html>
